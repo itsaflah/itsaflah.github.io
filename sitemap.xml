@@ -3,5 +3,37 @@
   <url>
     <loc>https://aflah.online/</loc>
     <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-03-13</lastmod>
+  </url>
+  <url>
+    <loc>https://school.aflah.online/</loc>
+    <priority>0.8</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-03-13</lastmod>
+  </url>
+  <url>
+    <loc>https://foryou.aflah.online/</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-03-13</lastmod>
+  </url>
+  <url>
+    <loc>https://cyberweb.aflah.online/</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-03-13</lastmod>
+  </url>
+  <url>
+    <loc>https://vpnweb.aflah.online/</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-03-13</lastmod>
+  </url>
+  <url>
+    <loc>https://rvels.aflah.online/</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+    <lastmod>2026-03-13</lastmod>
   </url>
 </urlset>

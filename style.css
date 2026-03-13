@@ -1030,3 +1030,370 @@ h1 .gold-line {
     cursor: auto;
   }
 }
+
+/* ── SEO INTRO (hero paragraph under tagline) ── */
+.seo-intro {
+  margin-top: 14px;
+  font-size: .62rem;
+  color: var(--text-mute);
+  letter-spacing: .06em;
+  line-height: 1.7;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: .55;
+}
+
+/* ── SEO ABOUT SECTION (crawlable brand bio) ── */
+.seo-about {
+  margin-top: 52px;
+  padding: 28px 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.seo-about h2 {
+  font-family: var(--font-display);
+  font-size: .55rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 400;
+  font-style: normal;
+  margin-bottom: 14px;
+}
+
+.seo-about p {
+  font-size: .65rem;
+  color: var(--text-dim);
+  line-height: 1.82;
+  letter-spacing: .03em;
+}
+
+.seo-about p + p {
+  margin-top: 10px;
+}
+
+.seo-about strong {
+  color: var(--text);
+  font-weight: inherit;
+}
+
+.seo-about a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(200,169,110,.25);
+  transition: border-color .2s;
+}
+
+.seo-about a:hover {
+  border-color: var(--gold);
+}
+
+/* ══════════════════════════════════════
+   FAN CARD STACK — PROJECT PREVIEWS
+══════════════════════════════════════ */
+
+.fan-wrap {
+  margin: 8px 0 0;
+}
+
+/* Stage — sets the 3-D perspective context */
+.fan-stage {
+  position: relative;
+  width: 100%;
+  /* height is set dynamically by JS via style.height */
+  min-height: 180px;
+  perspective: 1100px;
+  outline: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;    /* clip cards that slide offscreen */
+  touch-action: pan-y; /* allow vertical scroll, block horizontal to avoid conflict */
+}
+
+.fan-stage::before {
+  content: '';
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 10px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(200,169,110,.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fan-stage::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,0,0,.45), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Each fan card */
+.fan-card {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text);
+  border: 2px solid rgba(255,255,255,.08);
+  box-shadow: 0 16px 48px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.04) inset;
+  /* base transform will be overridden by JS */
+  transform-origin: bottom center;
+  transition:
+    transform .55s cubic-bezier(.23,1,.32,1),
+    opacity .45s ease,
+    box-shadow .3s ease,
+    border-color .3s ease;
+  will-change: transform, opacity;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fan-card[data-active="1"] {
+  border-color: rgba(200,169,110,.28);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,.6),
+    0 0 0 1px rgba(200,169,110,.1),
+    0 2px 0 rgba(255,255,255,.06) inset;
+  cursor: grab;
+}
+
+.fan-card[data-active="1"]:active {
+  cursor: grabbing;
+}
+
+/* Image layer */
+.fc-img {
+  position: absolute;
+  inset: 0;
+}
+
+.fc-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.fc-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+  font-size: .7rem;
+  letter-spacing: .12em;
+  color: var(--text-mute);
+  text-transform: uppercase;
+}
+
+/* Gradient overlay */
+.fc-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 55%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Card body */
+.fc-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 18px 20px;
+  z-index: 2;
+}
+
+.fc-tag {
+  display: inline-block;
+  font-size: .48rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(200,169,110,.35);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-bottom: 8px;
+  align-self: flex-start;
+}
+
+.fc-title {
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  font-weight: 300;
+  font-style: italic;
+  color: #fff;
+  letter-spacing: .02em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-desc {
+  margin-top: 4px;
+  font-size: .62rem;
+  color: rgba(255,255,255,.65);
+  letter-spacing: .05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-cta {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .58rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+
+.fc-cta svg {
+  width: 11px; height: 11px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fan-card[data-active="1"] .fc-cta {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Footer — arrows + dots */
+.fan-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.fan-arrow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: .95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .22s;
+  flex-shrink: 0;
+}
+
+.fan-arrow:hover {
+  background: var(--surface-hover);
+  border-color: rgba(200,169,110,.28);
+  color: var(--gold);
+  transform: scale(1.1);
+}
+
+.fan-arrow:disabled {
+  opacity: .25;
+  cursor: default;
+  transform: none;
+}
+
+.fan-dots {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.fan-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-mute);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all .25s;
+}
+
+.fan-dot.on {
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  transform: scale(1.25);
+}
+
+/* ─── RESPONSIVE ─── */
+
+/* Tablet & small desktop */
+@media (max-width: 768px) {
+  .fan-wrap {
+    margin: 4px -4px 0; /* allow slight bleed */
+  }
+  .fc-title {
+    font-size: 1.05rem;
+  }
+  .fan-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem; /* bigger tap target */
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .fan-wrap {
+    margin: 4px 0 0;
+  }
+  .fc-title {
+    font-size: .95rem;
+  }
+  .fc-desc {
+    font-size: .58rem;
+  }
+  .fc-body {
+    padding: 14px 14px;
+  }
+  .fan-footer {
+    margin-top: 14px;
+    gap: 12px;
+  }
+  .fan-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .fan-dots {
+    gap: 5px;
+  }
+  .fan-dot {
+    width: 6px;
+    height: 6px;
+  }
+}

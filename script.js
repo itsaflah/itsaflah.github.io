@@ -159,3 +159,334 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     if(t){ e.preventDefault(); window.scrollTo({top:t.offsetTop-(mob()?76:0),behavior:'smooth'}); }
   });
 });
+
+/* ══════════════════════════════════════════════
+   FAN CARD STACK — Vanilla JS port of CardStack
+══════════════════════════════════════════════ */
+
+const FAN_PROJECTS = [
+  {
+    id: 1,
+    title: 'PPMHSS Kottukkara',
+    description: 'School website · live concept by Aflah',
+    tag: 'Education',
+    href: 'https://school.aflah.online/',
+    img: 'https://s.wordpress.com/mshots/v1/https%3A%2F%2Fschool.aflah.online%2F?w=640&h=400'
+  },
+  {
+    id: 2,
+    title: 'ForYou',
+    description: 'Creative JS project · interactive surprise',
+    tag: 'Creative',
+    href: 'https://foryou.aflah.online/',
+    img: 'https://s.wordpress.com/mshots/v1/https%3A%2F%2Fforyou.aflah.online%2F?w=640&h=400'
+  },
+  {
+    id: 3,
+    title: 'QUANTUM',
+    description: 'Cyberpunk UI experiment',
+    tag: 'Experiment',
+    href: 'https://cyberweb.aflah.online/',
+    img: 'https://s.wordpress.com/mshots/v1/https%3A%2F%2Fcyberweb.aflah.online%2F?w=640&h=400'
+  },
+  {
+    id: 4,
+    title: 'CreaVPN',
+    description: 'Frontend UI demo · secure design',
+    tag: 'UI Design',
+    href: 'https://vpnweb.aflah.online/',
+    img: 'https://s.wordpress.com/mshots/v1/https%3A%2F%2Fvpnweb.aflah.online%2F?w=640&h=400'
+  },
+  {
+    id: 5,
+    title: 'Blog — rvels',
+    description: 'Study notes & tech writing',
+    tag: 'Writing',
+    href: 'https://rvels.aflah.online/',
+    img: 'https://s.wordpress.com/mshots/v1/https%3A%2F%2Frvels.aflah.online%2F?w=640&h=400'
+  }
+];
+
+class FanCards {
+  constructor(stageEl, dotsEl, prevBtn, nextBtn, items, opts = {}) {
+    this.stage   = stageEl;
+    this.dotsEl  = dotsEl;
+    this.prevBtn = prevBtn;
+    this.nextBtn = nextBtn;
+    this.items   = items;
+    this.len     = items.length;
+    this.active  = 0;
+    this.hovering = false;
+    this.timer   = null;
+
+    // Config (mirrors the React component's props)
+    this.o = Object.assign({
+      maxVisible:    7,
+      cardW:         480,
+      cardH:         300,
+      overlap:       0.48,
+      spreadDeg:     46,
+      depthOpacity:  true,
+      activeLift:    22,
+      activeScale:   1.04,
+      inactiveScale: 0.93,
+      loop:          true,
+      autoAdvance:   true,
+      intervalMs:    2800,
+      pauseOnHover:  true
+    }, opts);
+
+    this._buildCards();
+    this._buildDots();
+    this._bindEvents();
+    this._update();
+    this._startAuto();
+  }
+
+  /* ─── DOM construction ─── */
+  _buildCards() {
+    this.cardEls = this.items.map((item, i) => {
+      const el = document.createElement('a');
+      el.className = 'fan-card';
+      el.href      = item.href || '#';
+      el.target    = '_blank';
+      el.rel       = 'noopener noreferrer';
+      el.setAttribute('aria-label', item.title);
+      el.style.width  = this._cardW() + 'px';
+      el.style.height = this._cardH() + 'px';
+
+      const imgHTML = item.img
+        ? `<img src="${item.img}" alt="${item.title}" loading="eager">`
+        : `<div class="fc-img-placeholder">${item.title}</div>`;
+
+      el.innerHTML = `
+        <div class="fc-img">${imgHTML}</div>
+        <div class="fc-grad"></div>
+        <div class="fc-body">
+          ${item.tag ? `<span class="fc-tag">${item.tag}</span>` : ''}
+          <div class="fc-title">${item.title}</div>
+          ${item.description ? `<div class="fc-desc">${item.description}</div>` : ''}
+          <div class="fc-cta">
+            Visit site
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </div>
+        </div>`;
+
+      // Click inactive cards → select them; active card → follow href
+      el.addEventListener('click', e => {
+        if (i !== this.active) {
+          e.preventDefault();
+          this._goto(i);
+        }
+      });
+
+      this.stage.appendChild(el);
+      return el;
+    });
+  }
+
+  _buildDots() {
+    this.dotEls = this.items.map((item, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'fan-dot';
+      btn.setAttribute('aria-label', `Go to ${item.title}`);
+      btn.addEventListener('click', () => this._goto(i));
+      this.dotsEl.appendChild(btn);
+      return btn;
+    });
+  }
+
+  /* ─── Responsive sizing — fluid based on actual stage width ─── */
+  _stageW() {
+    return this.stage.getBoundingClientRect().width || this.stage.offsetWidth || 320;
+  }
+  _cardW() {
+    const sw = this._stageW();
+    // Mobile: one card fills ~88% of stage; Desktop: capped at o.cardW or 70% of stage
+    if (sw <= 480) return Math.round(sw * 0.82);
+    if (sw <= 700) return Math.round(sw * 0.72);
+    return Math.min(this.o.cardW, Math.round(sw * 0.68));
+  }
+  _cardH() {
+    // 5:3 aspect ratio
+    return Math.round(this._cardW() * 300 / 480);
+  }
+  _maxVis() {
+    const sw = this._stageW();
+    if (sw <= 480) return 1;   // mobile: only active card
+    if (sw <= 700) return 3;   // tablet: active + 1 on each side
+    return this.o.maxVisible;  // desktop: full fan
+  }
+  _spread() {
+    const sw = this._stageW();
+    if (sw <= 480) return 0;   // mobile: no rotation
+    if (sw <= 700) return 22;  // tablet: subtle
+    return this.o.spreadDeg;   // desktop: full spread
+  }
+
+  /* ─── Core layout update ─── */
+  _update() {
+    const { activeLift, activeScale, inactiveScale } = this.o;
+    const maxOff  = Math.floor(this._maxVis() / 2);
+    const cW      = this._cardW();
+    const cH      = this._cardH();
+    const overlap = maxOff === 0 ? 0 : this.o.overlap;
+    const spacing = Math.round(cW * (1 - overlap));
+    const stepDeg = maxOff > 0 ? this._spread() / maxOff : 0;
+    // Sync stage height to card height + breathing room
+    this.stage.style.height = (cH + 60) + 'px';
+
+    this.cardEls.forEach((el, i) => {
+      // Wrap-aware signed offset
+      let off = i - this.active;
+      if (this.o.loop && this.len > 1) {
+        const alt = off > 0 ? off - this.len : off + this.len;
+        if (Math.abs(alt) < Math.abs(off)) off = alt;
+      }
+      const abs     = Math.abs(off);
+      const visible = abs <= maxOff;
+      const isAct   = off === 0;
+
+      el.style.visibility    = visible ? 'visible' : 'hidden';
+      el.style.pointerEvents = visible ? 'auto' : 'none';
+      el.style.zIndex        = 100 - abs;
+      el.style.width         = cW + 'px';
+      el.style.height        = cH + 'px';
+      el.dataset.active      = isAct ? '1' : '0';
+
+      const scale  = isAct ? activeScale : inactiveScale;
+      const rotZ   = off * stepDeg;
+      const tx     = off * spacing;
+      // arc-down for side cards + active lift
+      const ty     = abs * 8 + (isAct ? -activeLift : 0);
+      // halve the standard margin so card centers in stage
+      const ml     = -(cW / 2);
+
+      el.style.marginLeft = ml + 'px';
+      el.style.transform  = visible
+        ? `translateX(${tx}px) translateY(${ty}px) rotateZ(${rotZ}deg) scale(${scale})`
+        : `translateX(${tx}px) translateY(${ty + 20}px) rotateZ(${rotZ}deg) scale(${scale * 0.8})`;
+      el.style.opacity = !visible ? '0' : isAct ? '1' : (0.55 + 0.35 * (1 - abs / maxOff)).toFixed(2);
+    });
+
+    // Dots
+    this.dotEls.forEach((d, i) => d.classList.toggle('on', i === this.active));
+
+    // Arrow states
+    if (!this.o.loop) {
+      this.prevBtn.disabled = this.active === 0;
+      this.nextBtn.disabled = this.active === this.len - 1;
+    }
+  }
+
+  /* ─── Navigation ─── */
+  _wrap(n) { return ((n % this.len) + this.len) % this.len; }
+  _goto(idx) { this.active = this._wrap(idx); this._update(); }
+  next()  { this._goto(this.active + 1); }
+  prev()  { this._goto(this.active - 1); }
+
+  /* ─── Event binding ─── */
+  _bindEvents() {
+    // Arrow buttons
+    this.nextBtn.addEventListener('click', () => this.next());
+    this.prevBtn.addEventListener('click', () => this.prev());
+
+    // Keyboard on stage
+    this.stage.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') this.next();
+      if (e.key === 'ArrowLeft')  this.prev();
+    });
+
+    // Pointer drag (active card only) — velocity-based swipe
+    let startX = null, startT = null;
+
+    this.stage.addEventListener('pointerdown', e => {
+      if (e.target.closest('.fan-card')?.dataset.active !== '1') return;
+      startX = e.clientX; startT = Date.now();
+      this.stage.setPointerCapture(e.pointerId);
+    });
+
+    this.stage.addEventListener('pointerup', e => {
+      if (startX === null) return;
+      const dx = e.clientX - startX;
+      const dt = Math.max(1, Date.now() - startT);
+      const v  = dx / dt; // px/ms
+      const threshold = Math.min(120, this._cardW() * 0.2);
+      if (dx > threshold || v > 0.5)  this.prev();
+      else if (dx < -threshold || v < -0.5) this.next();
+      startX = null; startT = null;
+    });
+
+    this.stage.addEventListener('pointercancel', () => { startX = null; });
+
+    // Hover pause
+    this.stage.addEventListener('mouseenter', () => { this.hovering = true; });
+    this.stage.addEventListener('mouseleave', () => { this.hovering = false; });
+
+    // Resize — update card sizes
+    window.addEventListener('resize', () => this._update());
+
+    // Cursor integration — register .fan-card links with the main cursor system
+    if (!mob()) {
+      this.cardEls.forEach(el => {
+        el.addEventListener('mouseenter', () => document.body.classList.add('ch'));
+        el.addEventListener('mouseleave', () => document.body.classList.remove('ch'));
+      });
+      this.dotEls.forEach(d => {
+        d.addEventListener('mouseenter', () => document.body.classList.add('ch'));
+        d.addEventListener('mouseleave', () => document.body.classList.remove('ch'));
+      });
+      [this.prevBtn, this.nextBtn].forEach(b => {
+        b.addEventListener('mouseenter', () => document.body.classList.add('ch'));
+        b.addEventListener('mouseleave', () => document.body.classList.remove('ch'));
+      });
+    }
+  }
+
+  /* ─── Auto-advance ─── */
+  _startAuto() {
+    if (!this.o.autoAdvance) return;
+    this.timer = setInterval(() => {
+      if (this.o.pauseOnHover && this.hovering) return;
+      this.next();
+    }, Math.max(700, this.o.intervalMs));
+  }
+
+  destroy() { if (this.timer) clearInterval(this.timer); }
+}
+
+/* Bootstrap the fan cards after loader fades (reuse the same load gate) */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const stage   = document.getElementById('fan-stage');
+    const dots    = document.getElementById('fan-dots');
+    const prevBtn = document.getElementById('fan-prev');
+    const nextBtn = document.getElementById('fan-next');
+
+    if (stage && dots && prevBtn && nextBtn) {
+      new FanCards(stage, dots, prevBtn, nextBtn, FAN_PROJECTS, {
+        autoAdvance: true,
+        intervalMs:  2800,
+        loop:        true,
+        pauseOnHover: true
+      });
+    }
+
+    // Make the preview section dot visible in section indicators
+    const secInd = document.getElementById('sec-ind');
+    if (secInd && !secInd.querySelector('[data-sec="preview"]')) {
+      const dot = document.createElement('div');
+      dot.className = 's-ind';
+      dot.dataset.sec = 'preview';
+      dot.dataset.lbl = 'Preview';
+      dot.addEventListener('click', () => {
+        const t = document.getElementById('preview');
+        if (t) t.scrollIntoView({ behavior: 'smooth' });
+      });
+      // Insert before the projects dot
+      const projDot = secInd.querySelector('[data-sec="projects"]');
+      secInd.insertBefore(dot, projDot);
+    }
+  }, 1500);
+});
+
